@@ -1,23 +1,21 @@
 import { App, TFolder } from 'obsidian';
 
 /**
- * Used to determine the folder if the 'print-folder-notes' action is activated.
+ * Gets the parent folder of the currently active file
  * 
- * @param app
- * @returns 
+ * @param app The Obsidian App instance
+ * @returns The parent folder of the active file, or null if not found
  */
 export async function getFolderByActiveFile(app: App): Promise<TFolder|null> {
+    const activeFile = app.workspace.getActiveFile();
 
-        const activeFile = app.workspace.getActiveFile();
+    if (activeFile) {
+        const parentFolder = activeFile.parent;
 
-        if (activeFile) {
-            const parentFolder = activeFile.parent;
-
-            if (parentFolder instanceof TFolder) {
-                return parentFolder
-            }
+        if (parentFolder instanceof TFolder) {
+            return parentFolder;
         }
+    }
 
-        return null
-
+    return null;
 }
