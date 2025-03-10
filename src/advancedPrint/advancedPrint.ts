@@ -11,7 +11,8 @@ import { getRenderedContent } from './advancedCapturePreview';
 export async function advancedPrint(
     app: App,
     manifest: PluginManifest,
-    settings: PrintPluginSettings
+    settings: PrintPluginSettings,
+    isSelection: boolean = false
 ) {
     try {
         const view = app.workspace.getActiveViewOfType(MarkdownView);
@@ -30,7 +31,7 @@ export async function advancedPrint(
             const filePath = view.file?.path || "Untitled";
 
             // Get the HTML content from the rendered preview
-            const renderedHtml = await getRenderedContent(app, settings);
+            const renderedHtml = await getRenderedContent(app, settings, isSelection);
             if (!renderedHtml) {
                 throw new Error('Failed to capture preview content');
             }

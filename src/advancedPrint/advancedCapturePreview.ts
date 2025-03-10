@@ -11,7 +11,7 @@ declare module "obsidian" {
  * Advanced print mode: captures a complete snapshot of the preview content
  * Uses Obsidian's preview rendering system with full height capture
  */
-export async function getRenderedContent(app: App, settings: PrintPluginSettings): Promise<HTMLElement | null> {
+export async function getRenderedContent(app: App, settings: PrintPluginSettings, isSelection: boolean = false): Promise<HTMLElement | null> {
     const activeView = app.workspace.getActiveViewOfType(MarkdownView);
     if (!activeView) return null;
 
@@ -22,8 +22,8 @@ export async function getRenderedContent(app: App, settings: PrintPluginSettings
         return null;
     }
 
-    const wasInEditMode = activeView.getMode() === 'source';   
-    
+    const wasInEditMode = activeView.getMode() === 'source';
+
     try {
         // Force a complete re-render
         if (wasInEditMode) {
@@ -45,24 +45,65 @@ export async function getRenderedContent(app: App, settings: PrintPluginSettings
 
         // Create container and clone content
         const container = createDiv('markdown-preview-view');
-        const originalSizer = previewEl.querySelector('.markdown-preview-sizer');
-        if (!originalSizer) {
-            throw new Error('No markdown-preview-sizer found');
+        
+        // Not working !
+        // Note: To test an alternative solution for selection printing,
+        // modify the handlePrint calls in main.ts from (false, true) to (true, true)
+        // This will enable advanced print mode in the modal for selection operations
+        if (isSelection) {
+            const selection = window.getSelection();
+            console.log("Selection:", selection);
+            
+            if (!selection || selection.rangeCount === 0) {
+                new Notice('No text selected');
+                return null;
+            }
+            
+            const sizer = document.createElement('div');
+            sizer.className = 'markdown-preview-sizer';
+            
+            const range = selection.getRangeAt(0);
+            const fragment = range.cloneContents();
+            
+            if (fragment.childNodes.length === 0) {
+                console.log("No content in selection fragment");
+                new Notice('Selection appears to be empty');
+                return null;
+            }
+            
+            console.log("Selection fragment:", fragment);
+
+            Array.from(fragment.childNodes).forEach(node => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    const p = document.createElement('p');
+                    p.appendChild(node.cloneNode(true));
+                    sizer.appendChild(p);
+                } else {
+                    sizer.appendChild(node.cloneNode(true));
+                }
+            });
+            
+            container.appendChild(sizer);
+            console.log("Final container with selection:", container);
+        } else {
+            const originalSizer = previewEl.querySelector('.markdown-preview-sizer');
+            if (!originalSizer) {
+                throw new Error('No markdown-preview-sizer found');
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            const clonedSizer = originalSizer.cloneNode(true) as HTMLElement;
+            container.appendChild(clonedSizer);
         }
 
-        // Final delay for any remaining dynamic content
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        const clonedSizer = originalSizer.cloneNode(true) as HTMLElement;
-        container.appendChild(clonedSizer);
-        
         // Add metadata if enabled
         if (settings.showMetadata) {
             addMetadataToPreview(container, app);
         }
-        
+
         return container;
-    } 
+    }
     finally {
         if (wasInEditMode) {
             await activeView.setState({ mode: 'source' }, { history: false });
@@ -89,7 +130,7 @@ async function waitForStableContent(app: App, element: HTMLElement): Promise<voi
         setTimeout(() => {
             let mutationCount = 0;
             let lastMutationTime = Date.now();
-            
+
             const observer = new MutationObserver(() => {
                 mutationCount++;
                 lastMutationTime = Date.now();
@@ -105,7 +146,7 @@ async function waitForStableContent(app: App, element: HTMLElement): Promise<voi
             // Check stability every 100ms
             const stabilityChecker = setInterval(() => {
                 const timeSinceLastMutation = Date.now() - lastMutationTime;
-                
+
                 // Consider content stable if no mutations for 1 second
                 if (timeSinceLastMutation > 1000) {
                     clearInterval(stabilityChecker);
@@ -141,7 +182,7 @@ function addMetadataToPreview(container: HTMLElement, app: App) {
             const metadataContent = metadataContainer.createDiv('custom-metadata-content');
             Object.entries(metadata).forEach(([key, value]) => {
                 const line = metadataContent.createDiv();
-                const displayValue = Array.isArray(value) 
+                const displayValue = Array.isArray(value)
                     ? value.join(', ')
                     : typeof value === 'object' && value !== null
                         ? JSON.stringify(value)

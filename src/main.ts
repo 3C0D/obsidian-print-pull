@@ -61,8 +61,16 @@ export default class PrintPlugin extends Plugin {
 
         this.addSettingTab(new PrintSettingTab(this.app, this));
 
+        // Add debounce to prevent double triggering from ribbon
+        let isProcessing = false;
         this.addRibbonIcon('printer', 'Print note', async () => {
+            if (isProcessing) return;
+            isProcessing = true;
             await this.handlePrint();
+            // Reset after a short delay
+            setTimeout(() => {
+                isProcessing = false;
+            }, 500);
         });
 
         this.registerEvent(
@@ -128,18 +136,8 @@ export default class PrintPlugin extends Plugin {
                 this.settings,
                 useAdvancedPrint,
                 async (state) => {
-                    // Dans la méthode handlePrint, remplacer :
                     if (useAdvancedPrint && state === 'advanced') {
-                        await advancedPrint(this.app, this.manifest, this.settings);
-                    } else if (state === 'standard') {
-                        await this.standardPrint(isSelection, file);
-                    } else {
-                        await this.basicPrint(isSelection, file);
-                    }
-                    
-                    // Par :
-                    if (useAdvancedPrint && state === 'advanced') {
-                        await advancedPrint(this.app, this.manifest, this.settings);
+                        await advancedPrint(this.app, this.manifest, this.settings, isSelection);
                     } else if (state === 'standard') {
                         await this.standardPrint(isSelection, file);
                     } else {
