@@ -79,6 +79,118 @@
     max-width: 100% !important;
 }
 
+/* Add support for code block language display */
+.obsidian-print pre {
+    position: relative;
+    margin-top: 1.5em !important;
+}
+
+.obsidian-print pre[class*="language-"]::before {
+    content: attr(class);
+    content: attr(class);
+    position: absolute;
+    top: 0.5em;
+    right: 0.5em;
+    font-size: 0.8em;
+    color: #666666be;
+    font-weight: bold;
+    text-transform: uppercase;
+    background: #f5f5f5ad;
+    padding: 0.1em 0.5em;
+    border: 1px solid #e1e4e8;
+    border-radius: 3px;
+}
+
+/* Clean up language class name display */
+.obsidian-print pre[class*="language-"]::before {
+    content: attr(class);
+    content: attr(class);
+    text-transform: none;
+}
+
+.obsidian-print pre[class^="language-"]::before {
+    content: attr(class);
+    content: attr(class);
+    text-transform: none;
+}
+
+/* Format specific language displays */
+.obsidian-print pre.language-javascript::before {
+    content: "JavaScript";
+}
+
+.obsidian-print pre.language-js::before {
+    content: "JavaScript";
+}
+
+.obsidian-print pre.language-typescript::before {
+    content: "TypeScript";
+}
+
+.obsidian-print pre.language-ts::before {
+    content: "TypeScript";
+}
+
+.obsidian-print pre.language-python::before {
+    content: "Python";
+}
+
+.obsidian-print pre.language-java::before {
+    content: "Java";
+}
+
+.obsidian-print pre.language-c::before {
+    content: "C";
+}
+
+.obsidian-print pre.language-cpp::before {
+    content: "C++";
+}
+
+.obsidian-print pre.language-csharp::before,
+.obsidian-print pre.language-cs::before {
+    content: "C#";
+}
+
+.obsidian-print pre.language-html::before {
+    content: "HTML";
+}
+
+.obsidian-print pre.language-css::before {
+    content: "CSS";
+}
+
+.obsidian-print pre.language-bash::before,
+.obsidian-print pre.language-sh::before {
+    content: "Shell";
+}
+
+.obsidian-print pre.language-yaml::before,
+.obsidian-print pre.language-yml::before {
+    content: "YAML";
+}
+
+.obsidian-print pre.language-json::before {
+    content: "JSON";
+}
+
+.obsidian-print pre.language-markdown::before,
+.obsidian-print pre.language-md::before {
+    content: "Markdown";
+}
+
+.obsidian-print pre.language-sql::before {
+    content: "SQL";
+}
+
+.obsidian-print pre.language-mermaid::before {
+    content: "Mermaid";
+}
+
+.obsidian-print pre.language-dataview::before {
+    content: "Dataview";
+}
+
 .obsidian-print pre code {
     border: none;
     padding: 0;
