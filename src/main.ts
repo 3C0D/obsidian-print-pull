@@ -9,8 +9,6 @@ import { initializeThemeColors, initializeFontSizes, PrintSettingTab } from './s
 import { openPrintModal } from './basicPrint/basicPrintPreview';
 import { generatePrintStyles } from './getStyles/generatePrintStyles';
 
-// TODO: add another method by scrolling to get the rendered content in advanced mode for selection
-
 export default class PrintPlugin extends Plugin {
     settings: PrintPluginSettings;
 
