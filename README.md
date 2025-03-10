@@ -1,70 +1,61 @@
 # Obsidian Print Plugin
 
-Enhanced printing capabilities for Obsidian notes.
+Enhanced printing capabilities for Obsidian notes with multiple printing modes.
 
 ## Features
 
-### Browser-Based Printing
-- **Superior Print Experience**: Printing is handled through your web browser, offering significantly more options than Obsidian's built-in Electron-based printing
-- **Full Browser Print Features**: Access to all standard browser printing capabilities
-- **Print Preview**: Preview your document before printing
-- **Easy Access**: Reopen the print dialog anytime using Ctrl+P in the browser window
+### Three Printing Modes
 
-### Print Modes
-- **Two printing modes** available when printing the active note:
-  - **Standard mode**: Quick and efficient printing
-  - **Advanced mode**: Enhanced rendering for complex elements like Mermaid diagrams and callouts (slightly slower)
+1. **Basic Mode**
+   - Direct printing within Obsidian
+   - Simple rendering of notes
+   - Lightweight and fast
+
+2. **Standard Mode**
+   - Browser-based printing with enhanced options
+   - Access to all standard browser printing capabilities
+   - Same rendering quality as Basic mode
+
+3. **Advanced Mode**
+   - Enhanced rendering for complex elements
+   - Full support for Mermaid diagrams, callouts, and icons
+   - MathJax formulas not supported
+   - Best visual fidelity (slightly slower)
 
 ### Print Options Modal
-![Print Modal](assets/print-modal.png)
+
+![Print Modal](assets/modal.png)
 
 The print modal provides quick access to common settings:
-- **Print Title**: Toggle the note title visibility in the output
-- **Show Metadata**: Toggle frontmatter metadata visibility
-- **Page Breaks at HR**: Convert horizontal rules (---) to page breaks
-- Choose between Standard or Advanced printing mode
+- Choose between Basic, Standard, and Advanced printing modes
+- Toggle page breaks at horizontal rules
+- Include or exclude the note title
+- Show or hide metadata
+
+### Preview Functionality
+
+- Preview your document before printing in all modes
+- Full-window preview in browser modes (visible after canceling the print dialog)
+- Press Ctrl+P in the preview window to reopen the print dialog if needed
 
 ### Additional Features
-- Print single notes or entire folders
-- Print selection only
-- Customizable fonts and colors
-- Import theme colors automatically
-- Custom CSS support via snippets
-- Combine folder notes or separate with page breaks
-- Ribbon icon and context menu integration
+
+- Print selection from notes
+- Print all notes in a folder
+- Customizable header sizes and colors
+- Metadata display in all printing modes
 
 ## Usage
 
-### Quick Start
-1. Click the printer icon in the ribbon or use the command palette
-2. Choose your print options in the modal
-3. Select your printing mode (Standard/Advanced)
-
-### Print Commands
-- `Print note (standard)`: Quick printing of the current note
-- `Print note (advanced)`: Enhanced rendering for complex elements
-- `Print selection`: Print only the selected text
-- `Print folder`: Print all notes in the current folder
-
-### Hotkeys
-If you print often, you can add a shortcut to the print action. Go to **Settings** > **Hotkeys**, search for 'print' and bind your preferred shortcut.
+- Use the ribbon icon or command palette to print the current note
+- Right-click on a file or folder to access printing options
+- Right-click in the editor to print the current note or selected text
 
 ## Settings
-- **Print title**: Include the note title
-- **Font size**: Adjust sizes for text and all heading levels
-- **Theme colors**: Import or customize colors for headings
-- **Print mode**: Choose default mode and modal behavior
-- **Combine folder notes**: Remove page breaks between folder notes
-- **Show metadata**: Include frontmatter metadata
-- **Page breaks at HR**: Convert horizontal rules to page breaks
-- **Custom CSS**: Add your own print styles
 
-## Customize CSS
-Create a `print.css` snippet file to customize the print output. Use `.obsidian-print` as prefix for your selectors.
-
-Example:
-```css
-.obsidian-print {
-    /* Your custom styles */
-}
-```
+- Adjust font sizes for all elements including headers
+- Customize header colors to match your preferences
+- Use the "get theme colors" button to automatically import colors from your current theme (light mode colors)
+- Enable/disable page breaks at horizontal rules
+- Toggle metadata display
+- Create custom CSS for advanced styling (use ".obsidian-print" prefix for all selectors)

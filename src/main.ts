@@ -1,13 +1,15 @@
-import { Plugin, Notice, TFile, TFolder, MarkdownView } from 'obsidian';
+import { Plugin, TFile, TFolder, MarkdownView } from 'obsidian';
 import { PrintPluginSettings, DEFAULT_SETTINGS } from './types';
-import { getFolderByActiveFile } from './utils/getFolderByActiveFile';
-import { printContent } from './utils/normalPrint';
-import { advancedPrint } from './utils/advancedPrint';
-import { PrintModeModal } from './modals/PrintModeModal';
-import { contentToHTML, generateHTML } from './utils/generatePreviewContent';
+import { printFolder } from './folderPrint';
+import { printContent } from './basicPrint/basicPrint';
+import { advancedPrint } from './advancedPrint/advancedPrint';
+import { PrintModeModal } from './PrintModeModal';
+import { contentToHTML } from './normalCapturePreview';
 import { initializeThemeColors, initializeFontSizes, PrintSettingTab } from './settings';
+import { openPrintModal } from './basicPrint/basicPrintPreview';
+import { generatePrintStyles } from './getStyles/generatePrintStyles';
 
-// TODO: Get MathJax to work
+// TODO: add another method by scrolling to get the rendered content in advanced mode for selection
 
 export default class PrintPlugin extends Plugin {
     settings: PrintPluginSettings;
@@ -26,7 +28,7 @@ export default class PrintPlugin extends Plugin {
 
         this.addCommand({
             id: 'advanced-print',
-            name: 'Current note (advanced)',
+            name: 'Current note (Advanced print in browser)',
             callback: async () => {
                 await advancedPrint(this.app, this.manifest, this.settings);
             }
@@ -34,20 +36,27 @@ export default class PrintPlugin extends Plugin {
 
         this.addCommand({
             id: 'standard-print',
-            name: 'Current note (standard)',
+            name: 'Current note (Standard print in browser)',
             callback: async () => await this.standardPrint(),
+        });
+
+        // original method using electron
+        this.addCommand({
+            id: 'print-note',
+            name: 'Current note (Basic print)',
+            callback: async () => await this.basicPrint(),
         });
 
         this.addCommand({
             id: 'print-selection',
             name: 'Selection',
-            callback: async () => await this.printSelection(),
+            callback: async () => await this.handlePrint(false, true),
         });
 
         this.addCommand({
             id: 'print-folder-notes',
             name: 'All notes in current folder',
-            callback: async () => await this.printFolder(),
+            callback: async () => await printFolder(this),
         });
 
         this.addSettingTab(new PrintSettingTab(this.app, this));
@@ -63,14 +72,14 @@ export default class PrintPlugin extends Plugin {
                         item
                             .setTitle('Print note')
                             .setIcon('printer')
-                            .onClick(async () => await this.standardPrint(file));
+                            .onClick(async () => await this.handlePrint(true, false, file));
                     });
                 } else {
                     menu.addItem((item) => {
                         item
                             .setTitle('Print all notes in folder')
                             .setIcon('printer')
-                            .onClick(async () => await this.printFolder(file as TFolder));
+                            .onClick(async () => await printFolder(this, file as TFolder));
                     });
                 }
             })
@@ -88,7 +97,7 @@ export default class PrintPlugin extends Plugin {
                     item
                         .setTitle('Print selection')
                         .setIcon('printer')
-                        .onClick(async () => await this.printSelection());
+                        .onClick(async () => await this.handlePrint(false, true));
                 });
             })
         );
@@ -96,92 +105,56 @@ export default class PrintPlugin extends Plugin {
 
     /**
      * Prints the current note or a specified file
+     * @param isSelection Whether to print only the selected text (default: false)
      * @param file Optional file to print, defaults to active file
      */
-    async standardPrint(file?: TFile) {
-        const content = await contentToHTML(this.app, this.settings, file, false);
+    async standardPrint(isSelection = false, file?: TFile) {
+        const content = await contentToHTML(this.app, this.settings, isSelection, file);
         if (!content) {
             return;
         }
-
-        await printContent(content, this.app, this.manifest, this.settings);
-    }
-
-    /**
-     * Prints the currently selected text
-     */
-    async printSelection() {
-        const content = await contentToHTML(this.app, this.settings, undefined, true);
-        if (!content) {
-            return;
-        }
-
         await printContent(content, this.app, this.manifest, this.settings);
     }
 
     /**
      * Handles the print logic (standard/advanced) with modal option
+     * @param useAdvancedPrint Whether to use advanced print mode (default: true)
+     * @param isSelection Whether to print only the selected text (default: false)
      */
-    private async handlePrint() {
+    public async handlePrint(useAdvancedPrint = true, isSelection = false, file?: TFile) {
         if (this.settings.useModal) {
             new PrintModeModal(
                 this.app,
                 this.settings,
-                async (useAdvanced) => {
-                    if (useAdvanced === null) return; // Cancel was clicked
-                    if (useAdvanced) {
+                useAdvancedPrint,
+                async (state) => {
+                    // Dans la méthode handlePrint, remplacer :
+                    if (useAdvancedPrint && state === 'advanced') {
                         await advancedPrint(this.app, this.manifest, this.settings);
+                    } else if (state === 'standard') {
+                        await this.standardPrint(isSelection, file);
                     } else {
-                        await this.standardPrint();
+                        await this.basicPrint(isSelection, file);
+                    }
+                    
+                    // Par :
+                    if (useAdvancedPrint && state === 'advanced') {
+                        await advancedPrint(this.app, this.manifest, this.settings);
+                    } else if (state === 'standard') {
+                        await this.standardPrint(isSelection, file);
+                    } else {
+                        await this.basicPrint(isSelection, file);
                     }
                 },
                 async () => await this.saveSettings()
             ).open();
         } else {
-            await this.standardPrint();
-        }
-    }
-
-    /**
-     * Prints all markdown files in the current folder or specified folder
-     * @param folder Optional folder to print, defaults to active file's folder
-     */
-    async printFolder(folder?: TFolder) {
-        if (!folder) {
-            await this.saveActiveFile()
-        }
-
-        const activeFolder = folder || await getFolderByActiveFile(this.app);
-
-        if (!activeFolder) {
-            new Notice('Could not resolve folder.');
-            return;
-        }
-
-        const files = activeFolder.children.filter((file) => file instanceof TFile && file.extension === 'md') as TFile[];
-
-        if (files.length === 0) {
-            new Notice('No markdown files found in the folder.');
-            return;
-        }
-
-        const folderContent = createDiv();
-
-        for (const file of files) {
-            const content = await generateHTML(this.app, this.settings, file, false);
-
-            if (!content) {
-                continue;
+            if (this.settings.useBrowserPrint) {
+                await this.standardPrint(isSelection, file);
+            } else {
+                await this.basicPrint(isSelection, file);
             }
-
-            if (!this.settings.combineFolderNotes) {
-                content.addClass('obsidian-print-page-break');
-            }
-
-            folderContent.append(content);
         }
-
-        await printContent(folderContent, this.app, this.manifest, this.settings);
     }
 
     /**
@@ -196,23 +169,19 @@ export default class PrintPlugin extends Plugin {
 
         return this.app.workspace.getActiveFile();
     }
+    /**
+     * Prints the current note or a specified file
+     * @param isSelection Whether to print only the selected text (default: false)
+     * @param file Optional file to print, defaults to active file
+     */
+    async basicPrint(isSelection = false, file?: TFile) {
+        const content = await contentToHTML(this.app, this.settings, isSelection, file);
+        if (!content) {
+            return;
+        }
 
-    async showPrintModal() {
-        const modal = new PrintModeModal(
-            this.app,
-            this.settings,
-            async (useAdvanced) => {
-                if (useAdvanced !== null) {
-                    if (useAdvanced) {
-                        await advancedPrint(this.app, this.manifest, this.settings);
-                    } else {
-                        await this.standardPrint();
-                    }
-                }
-            },
-            async () => await this.saveSettings()
-        );
-        modal.open();
+        const globalCSS = await generatePrintStyles(this.app, this.manifest, this.settings);
+        await openPrintModal(content, this.settings, globalCSS);
     }
 
     async saveSettings() {

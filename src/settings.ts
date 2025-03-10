@@ -1,7 +1,7 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import PrintPlugin from './main';
-import { getPrintSnippet, isPrintSnippetEnabled } from './utils/generatePrintStyles';
-import { getHeaderColors, getInlineTitleColor } from './utils/importThemeHeaders';
+import { getPrintSnippet, isPrintSnippetEnabled } from './getStyles/generatePrintStyles';
+import { getHeaderColors, getInlineTitleColor } from './getStyles/importThemeHeaders';
 
 export class PrintSettingTab extends PluginSettingTab {
     plugin: PrintPlugin;
@@ -42,16 +42,6 @@ export class PrintSettingTab extends PluginSettingTab {
                 .setValue(this.plugin.settings.printTitle)
                 .onChange(async (value) => {
                     this.plugin.settings.printTitle = value;
-                    await this.plugin.saveSettings();
-                }));
-
-        new Setting(containerEl)
-            .setName('Show print mode selection')
-            .setDesc('Show a modal to choose between standard and advanced print mode. The modal appears when using the ribbon button or the "Print note" option in the editor context menu. Advanced mode scans the entire rendered page.')
-            .addToggle(toggle => toggle
-                .setValue(this.plugin.settings.useModal)
-                .onChange(async (value) => {
-                    this.plugin.settings.useModal = value;
                     await this.plugin.saveSettings();
                 }));
 
@@ -187,6 +177,27 @@ export class PrintSettingTab extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 }));
         }
+
+        new Setting(containerEl)
+            .setName('Show print mode selection')
+            .setDesc('Show a modal to choose between basic, standard and advanced(when possible) print mode.')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.useModal)
+                .onChange(async (value) => {
+                    this.plugin.settings.useModal = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('Use browser print')
+            .setDesc('Enable advanced printing through browser. This provides more printing options and a better text formatting. When disabled, use Obsidian\'s (electron) basic print only with basic css styles.')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.useBrowserPrint)
+                .onChange(async (value) => {
+                    this.plugin.settings.useBrowserPrint = value;
+                    await this.plugin.saveSettings();
+                }));
+
     }
 }
 

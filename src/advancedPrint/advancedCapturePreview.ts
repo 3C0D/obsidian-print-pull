@@ -7,7 +7,10 @@ declare module "obsidian" {
     }
 }
 
-// Modify getRenderedContent to use the new function
+/**
+ * Advanced print mode: captures a complete snapshot of the preview content
+ * Uses Obsidian's preview rendering system with full height capture
+ */
 export async function getRenderedContent(app: App, settings: PrintPluginSettings): Promise<HTMLElement | null> {
     const activeView = app.workspace.getActiveViewOfType(MarkdownView);
     if (!activeView) return null;

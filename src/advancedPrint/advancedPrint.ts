@@ -1,9 +1,8 @@
 import { App, PluginManifest, Notice, MarkdownView } from 'obsidian';
 import { PrintPluginSettings } from 'src/types';
-
-import { PrintManager } from './printManager';
-import { getRenderedContent } from './capturePreview';
-import { generatePrintStyles } from './generatePrintStyles';
+import { generatePrintStyles } from '../getStyles/generatePrintStyles';
+import { PrintManager } from '../browserPrintManager';
+import { getRenderedContent } from './advancedCapturePreview';
 
 /**
  * Advanced print mode: ensures accurate rendering of complex elements (Mermaid diagrams, 
@@ -29,16 +28,16 @@ export async function advancedPrint(
 
         try {
             const filePath = view.file?.path || "Untitled";
-            
+
             // Get the HTML content from the rendered preview
             const renderedHtml = await getRenderedContent(app, settings);
             if (!renderedHtml) {
                 throw new Error('Failed to capture preview content');
             }
-    
+
             // Generate styles
             const globalCss = await generatePrintStyles(app, manifest, settings);
-    
+
             // Print
             const printer = new PrintManager();
             await printer.browserPrint(printer.createPrintableHtml(renderedHtml, globalCss, true, filePath));

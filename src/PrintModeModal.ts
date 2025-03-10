@@ -1,11 +1,12 @@
-import { Modal, App, Setting } from 'obsidian';
+import { Modal, App } from 'obsidian';
 import { PrintPluginSettings } from 'src/types';
 
 export class PrintModeModal extends Modal {
     constructor(
         app: App,
         private settings: PrintPluginSettings,
-        private onSubmit: (useAdvanced: boolean | null) => void,
+        private useAdvancedPrint: boolean,
+        private onSubmit: (printMode: string | null) => void,
         private saveSettings: () => Promise<void>
     ) {
         super(app);
@@ -13,11 +14,11 @@ export class PrintModeModal extends Modal {
 
     onOpen() {
         const { contentEl } = this;
-        
+
         // Set modal size
         this.modalEl.style.width = '400px';
         this.modalEl.style.height = '200px';
-        
+
         contentEl.empty();
         contentEl.createEl('h2', { text: 'Print Options' });
 
@@ -65,29 +66,33 @@ export class PrintModeModal extends Modal {
         buttonContainer.style.gap = '10px';
         buttonContainer.style.marginTop = '20px';
 
-        // Normal Print button
-        const normalBtn = buttonContainer.createEl('button');
-        normalBtn.setText('Normal Print');
-        normalBtn.addEventListener('click', () => {
+        // Basic Print button (Obsidian native)
+        const basicBtn = buttonContainer.createEl('button');
+        basicBtn.setText('Basic');
+        basicBtn.addEventListener('click', () => {
             this.close();
-            this.onSubmit(false);
+            this.onSubmit('basic');
         });
 
-        // Advanced Print button
-        const advancedBtn = buttonContainer.createEl('button');
-        advancedBtn.setText('Advanced Print');
-        advancedBtn.addEventListener('click', () => {
-            this.close();
-            this.onSubmit(true);
-        });
+        // Standard Print button (in browser)
+        if (this.settings.useBrowserPrint) {
+            const standardBtn = buttonContainer.createEl('button');
+            standardBtn.setText('Standard (browser)');
+            standardBtn.addEventListener('click', () => {
+                this.close();
+                this.onSubmit('standard');
+            });
+        }
 
-        // Cancel button
-        const cancelBtn = buttonContainer.createEl('button');
-        cancelBtn.setText('Cancel');
-        cancelBtn.addEventListener('click', () => {
-            this.close();
-            this.onSubmit(null);
-        });
+        // Advanced Print button (in browser)
+        if (this.useAdvancedPrint && this.settings.useBrowserPrint) {
+            const advancedBtn = buttonContainer.createEl('button');
+            advancedBtn.setText('Advanced (browser)');
+            advancedBtn.addEventListener('click', () => {
+                this.close();
+                this.onSubmit('advanced');
+            });
+        }
     }
 
     onClose() {

@@ -1,7 +1,7 @@
 import { App, PluginManifest, Notice, MarkdownView } from 'obsidian';
 import { PrintPluginSettings } from 'src/types';
-import { generatePrintStyles } from './generatePrintStyles';
-import { PrintManager } from './printManager';
+import { generatePrintStyles } from '../getStyles/generatePrintStyles';
+import { PrintManager } from '../browserPrintManager';
 
 /**
  * Prints the given content using the default browser

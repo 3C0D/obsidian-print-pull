@@ -21,6 +21,9 @@ export interface PrintPluginSettings {
     hrPageBreaks: boolean;
     showMetadata: boolean;
     useModal: boolean;
+    debugMode: boolean;
+    usePreview: boolean;
+    useBrowserPrint: boolean;
 }
 
 export const DEFAULT_SETTINGS: PrintPluginSettings = {
@@ -46,4 +49,7 @@ export const DEFAULT_SETTINGS: PrintPluginSettings = {
     hrPageBreaks: false,
     showMetadata: false,
     useModal: true,
+    debugMode: false,
+    usePreview: true,
+    useBrowserPrint: true,
 };
